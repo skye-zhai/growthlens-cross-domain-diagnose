@@ -43,7 +43,7 @@ def render():
     df = tools.external_context(df)
 
     colors = [_color(t) for t in df["机会类型"]]
-    # 气泡大小=优先级分(已计入归因置信度)，让"真正该行动"的格子最大
+    # 气泡大小=优先级分(已计入供给归因强度)，让"真正该行动"的格子最大
     sizes = df["优先级分"].clip(lower=0) * 0.7 + 50
 
     fig, ax = plt.subplots(figsize=(11, 7.5))

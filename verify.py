@@ -61,8 +61,8 @@ def main():
           approx(h["缺货率"], 0.4695, 0.01))
     check("泰国×3C 高意图加购量 = 4,340", "4340", h["高意图加购量"],
           h["高意图加购量"] == 4340)
-    check("泰国×3C 归因置信度 = 100%", "1.00", f"{h['归因置信度']:.2f}",
-          approx(h["归因置信度"], 1.0, 1e-6))
+    check("泰国×3C 供给归因强度 = 100%", "1.00", f"{h['供给归因强度']:.2f}",
+          approx(h["供给归因强度"], 1.0, 1e-6))
 
     # —— ③ 单位经济（会讲钱）——
     u = r["单位经济_TOP3"]
@@ -87,18 +87,18 @@ def main():
     exists = len(rh) == 1
     sig = bool(rh["统计显著"].iloc[0]) if exists else False
     oos = float(rh["oos_rate"].iloc[0]) if exists else -1.0
-    conf = float(rh["归因置信度"].iloc[0]) if exists else -1.0
+    conf = float(rh["供给归因强度"].iloc[0]) if exists else -1.0
     cause = str(rh["主因"].iloc[0]) if exists else ""
     check("红鲱鱼·巴西×美妆 转化缺口统计显著(问题真实)", "True", sig, sig is True)
     check("红鲱鱼·巴西×美妆 供给健康(缺货<10%)", "<0.10", f"{oos:.4f}", 0 <= oos < 0.10)
-    check("红鲱鱼·巴西×美妆 归因置信度被压低 ≈ 0.36", "~0.36", f"{conf:.2f}",
+    check("红鲱鱼·巴西×美妆 供给归因强度被压低 ≈ 0.36", "~0.36", f"{conf:.2f}",
           approx(conf, 0.36, 0.05))
     check("红鲱鱼·巴西×美妆 主因判为非供给(不误报)", "含'非供给'", cause,
           "非供给" in cause)
 
-    # —— ⑥ 区分力：存在「统计显著但归因置信度低」的格子 ——
+    # —— ⑥ 区分力：存在「统计显著但供给归因强度低」的格子 ——
     # 证明引擎能分「指标异常(真实)」与「异常是不是供给造成的」——纯漏斗做不到这步
-    discriminated = int(((full["统计显著"]) & (full["归因置信度"] <= 0.45)).sum())
+    discriminated = int(((full["统计显著"]) & (full["供给归因强度"] <= 0.45)).sum())
     check("存在'显著但被降权'格子(区分异常≠供给问题)", "≥1", discriminated,
           discriminated >= 1)
 

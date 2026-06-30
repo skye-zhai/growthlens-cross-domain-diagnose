@@ -119,9 +119,9 @@ growth_frameworks:
   prioritization_RICE:
     formula: RICE = (Reach × Impact × Confidence) / Effort
     impl: >
-      本工具用 Reach=高意图加购量、Impact=每用户转化缺口、Confidence=归因置信度
+      本工具用 Reach=高意图加购量、Impact=每用户转化缺口、Confidence=供给归因强度
       (转化缺口由供给驱动的可信度，红鲱鱼→低置信)、Effort=团队按补供给/调价难度填。
-      近似优先级分 = 可挽回首单 × 归因置信度。
+      近似优先级分 = 可挽回首单 × 供给归因强度。
   causation_discipline: >
     跨域错配是"强假设"，不是因果证明。结论须标注置信度，并给出验证方式
     (A/B 或增量性测试 incrementality)，区分先导指标与滞后指标。

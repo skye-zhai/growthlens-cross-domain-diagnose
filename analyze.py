@@ -53,7 +53,7 @@ def run():
         },
         "健康基准_加购到下单": round(benchmark, 4),
         "跨域错配_TOP": mismatch_df.to_dict(orient="records"),
-        "优先级行动清单": top3[["category", "country", "主因", "归因置信度",
+        "优先级行动清单": top3[["category", "country", "主因", "供给归因强度",
                           "可挽回首单", "可挽回GMV", "白烧CAC", "优先级分"]
                          ].to_dict(orient="records"),
         "头号错配": {
@@ -62,7 +62,7 @@ def run():
             "加购到下单转化率": float(top["加购→下单"]),
             "缺货率": float(top["oos_rate"]),
             "价格竞争力": float(top["price_competitiveness"]),
-            "归因置信度": float(top["归因置信度"]),
+            "供给归因强度": float(top["供给归因强度"]),
             "主因": top["主因"],
             "可挽回首单": float(top["可挽回首单"]),
         },
@@ -109,7 +109,7 @@ def human_summary(r):
         sig = "✓" if row.get("统计显著") else "✗"
         lines.append(
             f"{row['category']:<7}{row['country']:<7}{row['加购→下单']:>9.1%}"
-            f"{row['oos_rate']:>8.1%}{sig:>5}{row['归因置信度']:>7.2f}"
+            f"{row['oos_rate']:>8.1%}{sig:>5}{row['供给归因强度']:>7.2f}"
             f"{int(row['可挽回首单']):>9}{int(row['可挽回GMV']):>11}"
             f"{int(row['优先级分']):>8}")
     lines.append("-" * 70)
@@ -122,7 +122,7 @@ def human_summary(r):
         f"加购→下单仅 {h['加购到下单转化率']:.1%}")
     lines.append(
         f"   主因：{h['主因']}（缺货率 {h['缺货率']:.0%}、价格竞争力 {h['价格竞争力']:.2f}，"
-        f"归因置信度 {h['归因置信度']:.0%}）")
+        f"供给归因强度 {h['供给归因强度']:.0%}）")
     lines.append(
         f"   单位经济（TOP3）：可挽回首单 ~{int(u['可挽回首单合计'])} 单 / "
         f"可挽回 GMV ~${int(u['可挽回GMV合计']):,} / 止损白烧 CAC ~${int(u['白烧CAC合计']):,}")

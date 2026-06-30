@@ -165,7 +165,7 @@ def supply_demand_mismatch(top=8):
     """
     跨域核心方法：在『品类 × 国家』上对齐"需求意图"与"供给健康"，定位高意图却
     供给不足、可挽回的最大错配格子。引擎含：分品类基准、样本量门槛、统计显著性、
-    混杂因子守门、综合归因置信度、RICE 优先级、单位经济。
+    混杂因子守门、综合供给归因强度、RICE 优先级、单位经济。
     """
     b = query_behavior_funnel(by=["category", "country"])
     s = query_supply(by=["category", "country"])
@@ -195,12 +195,12 @@ def supply_demand_mismatch(top=8):
     gap = (m["基准"] - m["加购→下单"]).clip(lower=1e-6)
     m["混杂解释比例"] = (m["mix_effect"].clip(lower=0) / gap).clip(0, 1).round(2)
 
-    # —— ④ 综合归因置信度 = 供给缺口 ×(1-混杂)× 统计显著 ——
+    # —— ④ 综合供给归因强度 = 供给缺口 ×(1-混杂)× 统计显著 ——
     supply_conf = (m["supply_gap"] / 0.5).clip(0, 1)
     sig_factor = m["统计显著"].map({True: 1.0, False: 0.2})
-    m["归因置信度"] = (supply_conf * (1 - m["混杂解释比例"]) * sig_factor).round(2)
+    m["供给归因强度"] = (supply_conf * (1 - m["混杂解释比例"]) * sig_factor).round(2)
     # RICE 式优先级（Effort 默认均一，待团队按补供给/调价难度填实际值）
-    m["优先级分"] = (m["可挽回首单"] * m["归因置信度"]).round(0)
+    m["优先级分"] = (m["可挽回首单"] * m["供给归因强度"]).round(0)
 
     # —— ⑤ 单位经济：可挽回 GMV / 白烧 CAC ——
     ue = _semantic().get("unit_economics", {})
@@ -218,7 +218,7 @@ def supply_demand_mismatch(top=8):
     cols = ["category", "country", "addcart_uv", "加购→下单", "基准",
             "oos_rate", "price_competitiveness", "supply_gap",
             "样本量", "z值", "统计显著", "混杂解释比例",
-            "归因置信度", "可挽回首单", "可挽回GMV", "白烧CAC", "优先级分", "主因"]
+            "供给归因强度", "可挽回首单", "可挽回GMV", "白烧CAC", "优先级分", "主因"]
     return m[cols].head(top).reset_index(drop=True), global_bench
 
 
