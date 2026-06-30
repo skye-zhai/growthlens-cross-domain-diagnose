@@ -1,0 +1,127 @@
+# ============================================================================
+# 语义层 / 指标字典  (Semantic Layer)
+# ----------------------------------------------------------------------------
+# 这是整个 agent 的"地基"。官方实测：不写口径/流程时 LLM 分析类问题准确率 ≤21%，
+# 把口径+流程沉淀成这层后稳定到 95%+。
+# agent 只读这层 context（几百行），真实明细数据通过 tools.py 查询，绝不进 LLM。
+# ============================================================================
+
+domain: 新客增长 / 拉新质量诊断
+owner_note: >
+  「新客首单转化率」是一个没有单一团队 owns 的指标——获取看渠道、行为看漏斗、
+  供给看库存、物流看时效。它掉点时大家互相甩锅，真正的增长点掉在团队的缝里。
+  本工具用 AI 把"站内行为 × 供给"两域在『品类 × 国家』上对齐，把缝缝起来。
+
+# --- cohort 定义 -----------------------------------------------------------
+cohort:
+  name: 新客
+  definition: 统计周期内首次访问、且历史无成交订单的用户
+  window: 最近 30 天
+
+# --- 核心指标 --------------------------------------------------------------
+metrics:
+  新客首单转化率:
+    formula: order_uv / exposure_uv
+    desc: 新客从曝光到完成首单的整体转化率，本工具的锚点指标
+    direction: higher_is_better
+  加购转化率:
+    formula: addcart_uv / search_uv
+    desc: 高意图信号——搜了之后愿意加购的比例
+  加购到下单转化率:
+    formula: order_uv / addcart_uv
+    desc: 关键漏点步骤——加购了却没下单，往往是供给/价格/履约问题
+    direction: higher_is_better
+
+# --- 站内行为漏斗（已聚合，非原始 event） -----------------------------------
+behavior_funnel:
+  grain: date × channel × country × category × price_band
+  steps: [exposure_uv, click_uv, search_uv, addcart_uv, order_uv]   # 单调递减
+  step_conversions:
+    曝光→点击: click_uv / exposure_uv
+    点击→搜索: search_uv / click_uv
+    搜索→加购: addcart_uv / search_uv
+    加购→下单: order_uv / addcart_uv
+
+# --- 供给深度 --------------------------------------------------------------
+supply_depth:
+  grain: date × country × category
+  metrics:
+    in_stock_rate: 在售率（有货 SKU 占比），越高越好
+    oos_rate: 缺货率 = 1 - in_stock_rate
+    sku_count: 在售 SKU 数，反映选择丰富度
+    price_competitiveness: 价格竞争力指数 0~1，越高越有价格优势
+    sell_through_rate: 动销率，过高(>0.7)往往意味着备货不足、卖断货
+
+# --- 维度 ------------------------------------------------------------------
+dimensions:
+  country:   [印尼, 越南, 泰国, 菲律宾, 马来西亚, 巴西, 墨西哥, 沙特]
+  category:  [3C数码, 服饰, 美妆, 家居, 母婴, 食品]
+  price_band: [低, 中, 高]
+  channel:   [信息流, 搜索广告, 联盟, 自然流量, 社媒]
+  region_groups:
+    东南亚: [印尼, 越南, 泰国, 菲律宾, 马来西亚]
+    拉美:   [巴西, 墨西哥]
+    中东:   [沙特]
+
+# --- 跨域归因方法（本工具的护城河） ----------------------------------------
+attribution_method:
+  name: 供给-需求错配定位 (supply-demand mismatch)
+  intent_signal: addcart_uv                 # 高意图需求的体量
+  supply_health: in_stock_rate * price_competitiveness   # 0~1
+  supply_gap: 1 - supply_health
+  mismatch_score: demand_intent_share * supply_gap
+  logic: >
+    需求旺(加购多) + 供给差(缺货/没价格优势) 的『品类×国家』格子，
+    就是高意图新客白白流失、且可通过补供给挽回的最大增长杠杆。
+    纯漏斗工具只能看到"加购到下单转化低"，但分不清是供给问题还是别的——
+    跨域 join 才能把真凶定位到供给。
+  healthy_benchmark:
+    rule: 取供给健康(supply_health>=0.7)格子的"加购到下单转化率"中位数作为基准
+  recoverable_orders:
+    formula: sum over 错配格子 of addcart_uv * max(0, benchmark - 实际加购到下单转化率)
+    desc: 若把这些格子的转化修复到健康基准，可挽回的首单数
+
+# --- 单位经济（让结论会"讲钱"，对决策者/评委更有说服力） -------------------
+unit_economics:
+  aov_by_category:        # 客单价(USD)，用于把"可挽回首单"换算成"可挽回 GMV"
+    3C数码: 120
+    服饰: 35
+    美妆: 40
+    家居: 55
+    母婴: 45
+    食品: 25
+  default_aov: 40
+  notes: >
+    可挽回GMV = 可挽回首单 × AOV；白烧CAC = 可挽回首单 × 该国均 CAC（近似：
+    这些高意图新客若不因供给流失，花在他们身上的拉新成本就不算白烧）。
+    经验基准：LTV:CAC ≥ 3:1、回收期 < 12 个月为健康；新客留存每降 churn 2pct，
+    LTV 可提升约 67%——故"首单体验(供给/物流)"是留存与单位经济的关键杠杆。
+
+# --- 增长方法论资产（agent 生成结论时套用的框架，可复用沉淀） ----------------
+growth_frameworks:
+  AARRR:
+    desc: 获取 Acquisition / 激活 Activation / 留存 Retention / 收入 Revenue / 推荐 Referral
+    rule: "最大机会通常在最弱环节，而非最显眼环节。"
+    mapping:        # 漏斗步骤 → AARRR 阶段
+      曝光→点击: Acquisition
+      点击→搜索: Acquisition
+      搜索→加购: Activation
+      加购→下单: Revenue
+  weakest_stage_trap: >
+    聚合视角下"最差步骤"(常是曝光→点击，因基线最低)是陷阱；
+    真正可挽回的价值往往集中在某个跨域格子的某一步(本场景=加购→下单)。
+  growth_loops: >
+    把"获取→供给接住→首单体验→留存→口碑/推荐"看成循环而非线性漏斗：
+    供给/物流毁掉首单体验 → 留存崩 → 拉新预算白烧。新客若留不住，获取做得再好也是漏水的桶。
+  growth_accounting:
+    formula: Activeₜ = Activeₜ₋₁ + New + Resurrected − Churn
+    quick_ratio: (New + Resurrected) / Churned   # >1 才在增长
+  prioritization_RICE:
+    formula: RICE = (Reach × Impact × Confidence) / Effort
+    impl: >
+      本工具用 Reach=高意图加购量、Impact=每用户转化缺口、Confidence=归因置信度
+      (转化缺口由供给驱动的可信度，红鲱鱼→低置信)、Effort=团队按补供给/调价难度填。
+      近似优先级分 = 可挽回首单 × 归因置信度。
+  causation_discipline: >
+    跨域错配是"强假设"，不是因果证明。结论须标注置信度，并给出验证方式
+    (A/B 或增量性测试 incrementality)，区分先导指标与滞后指标。
