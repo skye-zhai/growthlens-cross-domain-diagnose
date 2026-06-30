@@ -45,6 +45,10 @@ echo "→ 造数（固定种子 SEED=42，可复现）"
 echo "→ 跑分析（确定性引擎）"
 "$VPY" analyze.py
 
+echo "→ 写结构化产物 output/diagnosis.json"
+mkdir -p output
+"$VPY" analyze.py --json > output/diagnosis.json
+
 echo "→ 声明自检（每个对外数字 → 引擎实算值 → 断言）"
 "$VPY" verify.py
 
