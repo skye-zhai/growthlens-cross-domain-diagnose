@@ -42,6 +42,14 @@ SKILL.md        Claude Code Skill  ── LLM 在数字之上写诊断+动作打
 
 ## 跑起来
 
+**一键复现 + 自检**（建环境→造数→分析→把每个对外数字复算并断言）：
+
+```bash
+bash run.sh        # 或 make ；全绿 = 仓库里没有一个编造的数字
+```
+
+想分步手动跑：
+
 ```bash
 # 1. 装依赖
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -85,6 +93,9 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 | `tools.py` | 工具层：行为/供给/外部查询 + 跨域 join（分品类基准·统计显著性·混杂守门·RICE·单位经济，含 CLI） |
 | `analyze.py` | 诊断主流程，输出 JSON / 人类摘要 |
 | `chart.py` | 可视化：供需错配象限图 → `output/quadrant.png` |
+| `run.sh` / `Makefile` | 一键复现 + 自检入口 |
+| `verify.py` | 声明自检：把每个对外数字复算并断言（全绿 = 没有编造的数字） |
+| `AGENTS.md` | 给 AI 评审的核对指引（命令 / 不变量 / 声明↔计算对照） |
 | `.claude/skills/growth-diagnose/` | Claude Code Skill 壳（位于仓库根目录） |
 
 ### 参赛提交材料
