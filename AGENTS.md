@@ -78,4 +78,5 @@ bash run.sh
 | `tools.py` | 工具层：pandas 查询 + 跨域 join（统计显著性 / 混杂守门 / RICE / 单位经济） |
 | `analyze.py` | 诊断主流程，`run()` 返回结构化结果，`--json` 输出 |
 | `gen_synthetic.py` | 合成数据生成器（SEED=42，内埋真洞察 + 红鲱鱼） |
-| `chart.py` | 象限图（可选，需 matplotlib） |
+| `chart.py` | 象限图（可选，需 `requirements-viz.txt` 里的 matplotlib） |
+| `build_poster.py` | 海报（可选）：生成 `submission/海报.html`，并在有 Chrome 时渲染 `output/poster.png` |

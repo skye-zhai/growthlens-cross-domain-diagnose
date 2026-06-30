@@ -1,0 +1,6 @@
+# 可视化产物的额外依赖（核心复现/自检 run.sh 不需要）
+# 生成象限图与海报 PNG 时安装：
+#   .venv/bin/pip install -r requirements-viz.txt
+#   .venv/bin/python chart.py          # → output/quadrant.png
+#   .venv/bin/python build_poster.py   # → submission/海报.html + output/poster.png(需本机 Chrome)
+matplotlib>=3.7

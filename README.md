@@ -63,8 +63,12 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # 3b. 单独看跨域错配排名
 .venv/bin/python tools.py mismatch
 
-# 3c. 生成供需错配象限图 → output/quadrant.png
+# 3c. 生成供需错配象限图 → output/quadrant.png（需额外依赖 matplotlib）
+.venv/bin/pip install -r requirements-viz.txt
 .venv/bin/python chart.py
+
+# 3d. 生成海报 → submission/海报.html + output/poster.png（PNG 渲染需本机 Chrome）
+.venv/bin/python build_poster.py
 
 # 4. 作为 Claude Code Skill 演示（最炫）
 #    在仓库根目录的 Claude Code 里直接调用 /growth-diagnose
@@ -92,7 +96,8 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 | `gen_synthetic.py` | 合成数据生成器（内埋一个真洞察 + 一个红鲱鱼） |
 | `tools.py` | 工具层：行为/供给/外部查询 + 跨域 join（分品类基准·统计显著性·混杂守门·RICE·单位经济，含 CLI） |
 | `analyze.py` | 诊断主流程，输出 JSON / 人类摘要 |
-| `chart.py` | 可视化：供需错配象限图 → `output/quadrant.png` |
+| `chart.py` | 可视化：供需错配象限图 → `output/quadrant.png`（需 `requirements-viz.txt`） |
+| `build_poster.py` | 生成海报 → `submission/海报.html` + `output/poster.png`（PNG 渲染需本机 Chrome） |
 | `run.sh` / `Makefile` | 一键复现 + 自检入口 |
 | `verify.py` | 声明自检：把每个对外数字复算并断言（全绿 = 没有编造的数字） |
 | `AGENTS.md` | 给 AI 评审的核对指引（命令 / 不变量 / 声明↔计算对照） |

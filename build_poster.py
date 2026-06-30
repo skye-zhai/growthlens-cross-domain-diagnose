@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""生成自包含海报 submission/海报.html —— 浏览器打开后截图即可导出 PNG。
-竖版 A 系比例(1240x1754, 约 A4@150dpi)，内嵌象限图。"""
+"""生成自包含海报 submission/海报.html，并(若有 Chrome)直接渲染 output/poster.png。
+竖版 A 系比例(1240x1754, 约 A4@150dpi)，内嵌象限图。
+
+依赖：output/quadrant.png(由 chart.py 生成)。PNG 渲染需本机有 Chrome/Chromium；
+没有时只产出 html 并打印手动截图命令——核心数字复现不依赖本脚本(见 verify.py)。"""
 import base64
 import pathlib
+import shutil
+import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent
 png_b64 = base64.b64encode((ROOT / "output" / "quadrant.png").read_bytes()).decode()
@@ -164,3 +169,35 @@ HTML = """<!doctype html>
 out = ROOT / "submission" / "海报.html"
 out.write_text(HTML.replace("__B64__", png_b64), encoding="utf-8")
 print(f"wrote {out} ({out.stat().st_size//1024} KB)")
+
+
+def find_chrome():
+    names = ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"]
+    for n in names:
+        p = shutil.which(n)
+        if p:
+            return p
+    mac = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ]
+    for p in mac:
+        if pathlib.Path(p).exists():
+            return p
+    return None
+
+
+png = ROOT / "output" / "poster.png"
+chrome = find_chrome()
+if chrome:
+    # window = poster 1240x1754 + body padding 32px*2；scale 2x → 2608x3636
+    cmd = [chrome, "--headless", "--disable-gpu", "--hide-scrollbars",
+           "--force-device-scale-factor=2", "--window-size=1304,1818",
+           f"--screenshot={png}", str(out)]
+    subprocess.run(cmd, check=True,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print(f"rendered {png} ({png.stat().st_size//1024} KB) via {pathlib.Path(chrome).name}")
+else:
+    print("未找到 Chrome/Chromium，跳过 PNG 渲染。html 已生成，可手动截图：")
+    print(f'  "<Chrome>" --headless --force-device-scale-factor=2 '
+          f'--window-size=1304,1818 --screenshot="{png}" "{out}"')
