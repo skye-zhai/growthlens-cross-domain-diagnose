@@ -4,3 +4,5 @@ __pycache__/
 data/*.csv
 node_modules/
 *.pdf
+
+.DS_Store
